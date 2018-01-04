@@ -11,9 +11,10 @@ class QuizActivity : AppCompatActivity() {
     private val TAG = "QuizActivity"
     private val KEY_INDEX = "index"
     private val KEY_ANSWERS = "answers"
+    private val KEY_POINT = "point"
 
     private val questionBank: Array<Question> = arrayOf(
-            Question(R.string.question_australia, true),
+            Question(R.string.question_australia, false),
             Question(R.string.question_oceans, true),
             Question(R.string.question_mideast, false),
             Question(R.string.question_africa, false),
@@ -22,6 +23,7 @@ class QuizActivity : AppCompatActivity() {
 
     )
     private var currentIndex: Int = 0
+    private var point = 0
     private var answers = hashMapOf<Int, Boolean>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +34,8 @@ class QuizActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             currentIndex = savedInstanceState.getInt(KEY_INDEX, 0)
             answers = savedInstanceState.getSerializable(KEY_ANSWERS) as HashMap<Int, Boolean>
+            point = savedInstanceState.getInt(KEY_POINT, 0)
+            updatePoint()
         }
 
         true_button.setOnClickListener {
@@ -77,6 +81,7 @@ class QuizActivity : AppCompatActivity() {
         Log.i(TAG, "onSaveInstanceState")
         savedInstanceState.putInt(KEY_INDEX, currentIndex)
         savedInstanceState.putSerializable(KEY_ANSWERS, answers)
+        savedInstanceState.putInt(KEY_POINT, point)
     }
 
     override fun onStop() {
@@ -107,6 +112,11 @@ class QuizActivity : AppCompatActivity() {
         false_button.isEnabled = buttonsEnabled
     }
 
+    private fun updatePoint() {
+        Log.d(TAG, "updatePoint(): " + point.toString())
+        pointText.setText("Point：" + point.toString() + "/6")
+    }
+
     private fun checkAnswer(userPressedTrue: Boolean) {
         val answerIsTrue = questionBank[currentIndex].isAnswerTrue
 
@@ -115,6 +125,7 @@ class QuizActivity : AppCompatActivity() {
         if (userPressedTrue == answerIsTrue) {
             messageResId = R.string.correct_toast
             answers[currentIndex] = true
+            point += 1
         } else {
             messageResId = R.string.incorrect_toast
             answers[currentIndex] = false
@@ -123,20 +134,7 @@ class QuizActivity : AppCompatActivity() {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
                 .show()
         updateQuestion()
-        checkScore()
+        updatePoint()
     }
 
-    private fun checkScore() {
-        if (answers.size == questionBank.size) {
-            var correctAnswers: Int = 0
-            for ((_, isCorrect) in answers) {
-                if (isCorrect) {
-                    correctAnswers++
-                }
-            }
-            val score = Math.round(correctAnswers.toDouble() / answers.size * 100).toInt()
-            val scoreText = applicationContext.resources.getString(R.string.quiz_score, score)
-            Toast.makeText(this, scoreText, Toast.LENGTH_LONG).show()
-        }
-    }
 }
